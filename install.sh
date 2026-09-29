@@ -5,6 +5,7 @@ set -euo pipefail
 shopt -s nullglob
 
 KITTY_VERSION=0.49.1
+STARSHIP_VERSION=1.26.0
 NF_RELEASE=3.5.1
 NF_ASSET=JetBrainsMono                     # release asset / zip name
 NF_GLOB='JetBrainsMonoNerdFontMono-*.ttf'  # Mono variant only, inside the zip
@@ -54,11 +55,11 @@ install_font() {
 }
 
 link_configs() {
-    for src in "$REPO"/config/*/; do
+    for src in "$REPO"/config/*; do
         src="${src%/}"
         local dst="$CONFIG/${src##*/}"
         if [ -e "$dst" ] && [ ! -L "$dst" ]; then
-            echo "ERROR: $dst exists and is not a symlink; move it into $src first" >&2
+            echo "ERROR: $dst exists and is not a symlink; move it aside" >&2
             exit 1
         fi
         ln -sfn "$src" "$dst"
@@ -84,7 +85,19 @@ export skip_global_compinit=1'
     echo "wrote $f"
 }
 
+install_starship() {
+    local have="$(starship --version 2>/dev/null | awk '{print $2}')" || have=
+    if [ "$have" = "$STARSHIP_VERSION" ]; then
+        echo "starship $STARSHIP_VERSION already installed"
+    else
+        echo "installing starship $STARSHIP_VERSION (found: ${have:-none})"
+        curl -sS https://starship.rs/install.sh \
+            | sh -s -- -b "$LOCAL/bin" -y --version "v$STARSHIP_VERSION"
+    fi
+}
+
 install_kitty
+install_starship
 install_desktop_entry
 install_font
 link_configs
