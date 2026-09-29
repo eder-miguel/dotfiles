@@ -54,7 +54,7 @@ install_font() {
 }
 
 link_configs() {
-    for src in "$REPO"/*/; do
+    for src in "$REPO"/config/*/; do
         src="${src%/}"
         local dst="$CONFIG/${src##*/}"
         if [ -e "$dst" ] && [ ! -L "$dst" ]; then
@@ -66,10 +66,29 @@ link_configs() {
     done
 }
 
+install_zshenv() {
+    local f="$HOME/.zshenv"
+    local want='export ZDOTDIR="$HOME/code/dotfiles/zsh"
+export SHELL=/usr/bin/zsh
+typeset -U path
+path=("$HOME/.local/bin" $path)
+export skip_global_compinit=1'
+    if [ -f "$f" ] && [ "$(cat "$f")" = "$want" ]; then
+        echo "$f already up to date"; return
+    fi
+    if [ -e "$f" ]; then
+        cp "$f" "$f.bak"
+        echo "NOTE: backed up existing $f to $f.bak" >&2
+    fi
+    printf '%s\n' "$want" > "$f"
+    echo "wrote $f"
+}
+
 install_kitty
 install_desktop_entry
 install_font
 link_configs
+install_zshenv
 
 case ":$PATH:" in
     *":$LOCAL/bin:"*) ;;
