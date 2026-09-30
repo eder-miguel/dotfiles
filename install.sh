@@ -12,6 +12,7 @@ BAT_VERSION=0.26.1
 EZA_VERSION=0.23.5
 FZF_VERSION=0.74.4
 ZOXIDE_VERSION=0.10.0
+DELTA_VERSION=0.19.2
 NF_RELEASE=3.5.1
 NF_ASSET=JetBrainsMono                     # release asset / zip name
 NF_GLOB='JetBrainsMonoNerdFontMono-*.ttf'  # Mono variant only, inside the zip
@@ -197,6 +198,33 @@ install_zoxide() {
     echo "installed zoxide $ZOXIDE_VERSION"
 }
 
+install_delta() {
+    local have; have="$("$LOCAL/bin/delta" --version 2>/dev/null | awk '{print $2}')" || have=""
+    if [ "$have" = "$DELTA_VERSION" ]; then
+        echo "delta $DELTA_VERSION already installed"; return
+    fi
+    echo "installing delta $DELTA_VERSION (found: ${have:-none})"
+
+    local tmp; tmp="$(mktemp -d)"
+    curl -fsSL -o "$tmp/delta.tar.gz" \
+        "https://github.com/dandavison/delta/releases/download/$DELTA_VERSION/delta-$DELTA_VERSION-x86_64-unknown-linux-musl.tar.gz"
+    tar -xzf "$tmp/delta.tar.gz" -C "$tmp"
+    install -m755 \
+        "$tmp/delta-$DELTA_VERSION-x86_64-unknown-linux-musl/delta" \
+        "$LOCAL/bin/delta"
+    rm -rf "$tmp"
+    echo "installed delta $DELTA_VERSION"
+}
+
+install_delta_config() {
+    git config --global core.pager delta
+    git config --global interactive.diffFilter 'delta --color-only'
+    git config --global delta.navigate true
+    git config --global merge.conflictStyle zdiff3
+    git config --global diff.colorMoved zebra
+    echo "configured delta as Git pager"
+}
+
 install_kitty
 install_starship
 install_desktop_entry
@@ -209,6 +237,8 @@ install_bat
 install_eza
 install_fzf
 install_zoxide
+install_delta
+install_delta_config
 
 case ":$PATH:" in
     *":$LOCAL/bin:"*) ;;
