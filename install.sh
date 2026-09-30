@@ -11,6 +11,7 @@ FD_VERSION=10.2.0
 BAT_VERSION=0.26.1
 EZA_VERSION=0.23.5
 FZF_VERSION=0.74.4
+ZOXIDE_VERSION=0.10.0
 NF_RELEASE=3.5.1
 NF_ASSET=JetBrainsMono                     # release asset / zip name
 NF_GLOB='JetBrainsMonoNerdFontMono-*.ttf'  # Mono variant only, inside the zip
@@ -179,6 +180,23 @@ install_fzf() {
     echo "installed fzf $FZF_VERSION"
 }
 
+install_zoxide() {
+    local have; have="$("$LOCAL/bin/zoxide" --version 2>/dev/null | awk '{print $2}')" || have=""
+    have="${have#v}"
+    if [ "$have" = "$ZOXIDE_VERSION" ]; then
+        echo "zoxide $ZOXIDE_VERSION already installed"; return
+    fi
+    echo "installing zoxide $ZOXIDE_VERSION (found: ${have:-none})"
+
+    local tmp; tmp="$(mktemp -d)"
+    curl -fsSL -o "$tmp/zoxide.tar.gz" \
+        "https://github.com/ajeetdsouza/zoxide/releases/download/v$ZOXIDE_VERSION/zoxide-$ZOXIDE_VERSION-x86_64-unknown-linux-musl.tar.gz"
+    tar -xzf "$tmp/zoxide.tar.gz" -C "$tmp"
+    install -m755 "$tmp/zoxide" "$LOCAL/bin/zoxide"
+    rm -rf "$tmp"
+    echo "installed zoxide $ZOXIDE_VERSION"
+}
+
 install_kitty
 install_starship
 install_desktop_entry
@@ -190,6 +208,7 @@ install_fd
 install_bat
 install_eza
 install_fzf
+install_zoxide
 
 case ":$PATH:" in
     *":$LOCAL/bin:"*) ;;
