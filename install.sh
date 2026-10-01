@@ -271,6 +271,18 @@ link_tmux_config() {
     echo "linked tmux config"
 }
 
+install_tmux_plugins() {
+    local tpm="$HOME/.tmux/plugins/tpm"
+
+    if [[ ! -x "$tpm/bin/install_plugins" ]]; then
+        echo "error: TPM installer missing at $tpm/bin/install_plugins" >&2
+        return 1
+    fi
+
+    "$tpm/bin/install_plugins"
+    echo "installed tmux plugins"
+}
+
 install_kitty
 install_starship
 install_desktop_entry
@@ -279,6 +291,7 @@ link_configs
 install_zshenv
 install_tpm
 link_tmux_config
+install_tmux_plugins
 install_rg
 install_fd
 install_bat
