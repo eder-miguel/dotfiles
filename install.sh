@@ -225,12 +225,60 @@ install_delta_config() {
     echo "configured delta as Git pager"
 }
 
+install_tpm() {
+    local tpm="$HOME/.tmux/plugins/tpm"
+
+    if [[ -d "$tpm/.git" ]]; then
+        echo "TPM already installed"
+        return
+    fi
+
+    if [[ -e "$tpm" ]]; then
+        echo "error: $tpm exists but is not a TPM checkout" >&2
+        return 1
+    fi
+
+    mkdir -p "$(dirname "$tpm")"
+    git clone https://github.com/tmux-plugins/tpm "$tpm"
+    echo "installed TPM"
+}
+
+link_tmux_config() {
+    local src="$REPO/tmux/.tmux.conf"
+    local dst="$HOME/.tmux.conf"
+
+    if [[ ! -f "$src" ]]; then
+        echo "error: missing $src" >&2
+        return 1
+    fi
+
+    if [[ -L "$dst" ]]; then
+        if [[ "$(readlink "$dst")" == "$src" ]]; then
+            echo "tmux config already linked"
+            return
+        fi
+        rm "$dst"
+    elif [[ -e "$dst" ]]; then
+        if cmp -s "$dst" "$src"; then
+            rm "$dst"
+        else
+            echo "error: refusing to overwrite different $dst" >&2
+            return 1
+        fi
+    fi
+
+    ln -s "$src" "$dst"
+    echo "linked tmux config"
+}
+
 install_kitty
 install_starship
 install_desktop_entry
 install_font
 link_configs
 install_zshenv
+install_tpm
+link_tmux_config
 install_rg
 install_fd
 install_bat
